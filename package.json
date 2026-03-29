@@ -1,0 +1,17 @@
+{
+  "name": "agentic-novel-outliner",
+  "version": "1.0.0",
+  "description": "4-agent system for generating publication-quality novel outlines with matching master prompts",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "cli": "node cli.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7"
+  },
+  "devDependencies": {
+    "vite": "^6.2.0"
+  }
+}

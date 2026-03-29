@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agentic Novel Outliner — AI-Powered Book Outline Generator</title>
+  <meta name="description" content="Generate publication-quality novel outlines with matching master prompts using 4 specialized AI agents for fiction, non-fiction, short stories, and kids books.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/src/ui/styles.css">
+</head>
+<body>
+  <div id="app">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-inner">
+        <div class="logo">
+          <span class="logo-icon">🖋️</span>
+          <span class="logo-text">Agentic Outliner</span>
+        </div>
+        <div class="header-actions">
+          <button id="settings-btn" class="btn btn-ghost" title="Settings">⚙️</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal hidden">
+      <div class="modal-backdrop"></div>
+      <div class="modal-content glass-card">
+        <h2>API Settings</h2>
+        <div class="settings-form">
+          <div class="form-group">
+            <label for="groq-key">Groq API Key</label>
+            <input type="password" id="groq-key" placeholder="gsk_..." class="input">
+          </div>
+          <div class="form-group">
+            <label for="openrouter-key">OpenRouter API Key</label>
+            <input type="password" id="openrouter-key" placeholder="sk-or-..." class="input">
+          </div>
+          <div class="form-group">
+            <label for="nvidia-key">NVIDIA API Key</label>
+            <input type="password" id="nvidia-key" placeholder="nvapi-..." class="input">
+          </div>
+          <div class="form-group">
+            <label for="default-provider">Default Provider</label>
+            <select id="default-provider" class="input">
+              <option value="groq">Groq (Fast)</option>
+              <option value="openrouter">OpenRouter (Multi-model)</option>
+              <option value="nvidia">NVIDIA (Enterprise)</option>
+            </select>
+          </div>
+          <div class="settings-actions">
+            <button id="save-settings" class="btn btn-primary">Save Settings</button>
+            <button id="close-settings" class="btn btn-ghost">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="main">
+      
+      <!-- Screen 1: Agent Selection -->
+      <section id="screen-agents" class="screen active">
+        <div class="screen-header">
+          <h1>What are we outlining?</h1>
+          <p class="subtitle">Choose your book type. Each agent specializes in genre-specific outline structures.</p>
+        </div>
+        <div class="agent-grid" id="agent-grid">
+          <!-- Populated by JS -->
+        </div>
+      </section>
+
+      <!-- Screen 2: Genre Selection -->
+      <section id="screen-genres" class="screen">
+        <div class="screen-header">
+          <button class="btn btn-ghost back-btn" id="back-to-agents">← Back</button>
+          <h1 id="genre-title">Choose Genre</h1>
+          <p class="subtitle" id="genre-subtitle">Select the genre that best fits your book idea.</p>
+        </div>
+        <div class="genre-grid" id="genre-grid">
+          <!-- Populated by JS -->
+        </div>
+      </section>
+
+      <!-- Screen 2.5: Choose Path (Brainstorm or Direct) -->
+      <section id="screen-path" class="screen">
+        <div class="screen-header">
+          <button class="btn btn-ghost back-btn" id="back-to-genres-from-path">← Back</button>
+          <h1>How do you want to start?</h1>
+          <p class="subtitle">Choose your path based on how developed your idea is.</p>
+        </div>
+        <div class="path-grid">
+          <div class="path-card path-brainstorm" id="path-brainstorm">
+            <div class="path-card-glow"></div>
+            <span class="path-icon">💡</span>
+            <h2>Brainstorm with AI</h2>
+            <p>Talk through your idea with an AI partner. It'll ask the right questions, help you develop characters, themes, and structure — then compile everything for the outline generator.</p>
+            <span class="path-tag">Recommended</span>
+          </div>
+          <div class="path-card path-direct" id="path-direct">
+            <span class="path-icon">✍️</span>
+            <h2>I Know My Idea</h2>
+            <p>Already have a clear vision? Skip straight to the input form and describe your book idea directly. Best for well-developed concepts.</p>
+            <span class="path-tag secondary">Quick start</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Screen 3: Brainstorm Chat -->
+      <section id="screen-brainstorm" class="screen">
+        <div class="brainstorm-layout">
+          <div class="brainstorm-header">
+            <button class="btn btn-ghost back-btn" id="back-from-brainstorm">← Back</button>
+            <div class="brainstorm-title">
+              <span class="brainstorm-icon">💡</span>
+              <div>
+                <h2>Brainstorm Session</h2>
+                <p class="brainstorm-subtitle" id="brainstorm-genre-label">Fiction • Thriller</p>
+              </div>
+            </div>
+            <div class="brainstorm-actions-header">
+              <button class="btn btn-ghost" id="brainstorm-use-brief" disabled title="Continue to outline generation">
+                🚀 Use Brief & Generate
+              </button>
+            </div>
+          </div>
+          
+          <div class="chat-container" id="chat-container">
+            <div class="chat-messages" id="chat-messages">
+              <!-- Messages populated by JS -->
+              <div class="chat-loading" id="chat-loading">
+                <div class="typing-indicator">
+                  <span></span><span></span><span></span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="chat-input-area">
+            <div class="chat-input-wrapper">
+              <textarea id="chat-input" class="chat-input" rows="1" 
+                placeholder="Share your book idea..." 
+                maxlength="5000"></textarea>
+              <button id="chat-send" class="chat-send-btn" title="Send message">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="22" y1="2" x2="11" y2="13"></line>
+                  <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                </svg>
+              </button>
+            </div>
+            <div class="chat-hint">
+              Press <kbd>Enter</kbd> to send • <kbd>Shift+Enter</kbd> for new line • Say <strong>"compile"</strong> when ready
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Screen 4: Book Idea Input (Direct path) -->
+      <section id="screen-input" class="screen">
+        <div class="screen-header">
+          <button class="btn btn-ghost back-btn" id="back-to-path">← Back</button>
+          <h1>Tell us about your book</h1>
+          <p class="subtitle" id="input-subtitle">The more detail you provide, the better the outline.</p>
+        </div>
+        <div class="input-form glass-card">
+          <div class="form-group">
+            <label for="book-title">Working Title <span class="optional">(optional)</span></label>
+            <input type="text" id="book-title" class="input" placeholder="Your book's working title...">
+          </div>
+          <div class="form-group">
+            <label for="book-idea">Book Idea <span class="required">*</span></label>
+            <textarea id="book-idea" class="input textarea" rows="8" 
+              placeholder="Describe your book idea in detail. Include:&#10;&#10;• The core premise or concept&#10;• Main characters and their situations&#10;• The setting (time, place)&#10;• What makes this book unique&#10;• The emotional journey you want readers to experience"></textarea>
+          </div>
+          <div class="form-group">
+            <label for="additional-details">Additional Details <span class="optional">(optional)</span></label>
+            <textarea id="additional-details" class="input textarea" rows="3"
+              placeholder="Comparable titles, target audience, specific structural requests..."></textarea>
+          </div>
+          <div class="form-group scale-group">
+            <label>Book Scale</label>
+            <div class="scale-controls">
+              <div class="scale-field">
+                <label for="chapter-count" class="scale-label">
+                  <span id="unit-name-label">Chapters</span>
+                </label>
+                <div class="scale-input-row">
+                  <input type="number" id="chapter-count" min="1" max="60" class="input input-sm" value="25">
+                  <span class="scale-hint" id="chapter-hint">Recommended: 20-30</span>
+                </div>
+              </div>
+              <div class="scale-field">
+                <label for="chapter-length" class="scale-label">Length per unit</label>
+                <select id="chapter-length" class="input input-sm">
+                  <option value="short">Short</option>
+                  <option value="medium" selected>Medium</option>
+                  <option value="long">Long</option>
+                </select>
+              </div>
+            </div>
+            <div class="scale-estimate" id="scale-estimate">
+              ~75,000 words estimated
+            </div>
+          </div>
+          <div class="selected-info">
+            <span class="info-badge" id="selected-agent-badge"></span>
+            <span class="info-badge" id="selected-genre-badge"></span>
+          </div>
+          <button id="generate-btn" class="btn btn-primary btn-large">
+            <span class="btn-icon">🚀</span>
+            Generate Outline
+          </button>
+        </div>
+      </section>
+
+      <!-- Screen 4: Generation Progress -->
+      <section id="screen-progress" class="screen">
+        <div class="screen-header">
+          <h1>Generating Your Outline</h1>
+          <p class="subtitle">This takes 2-5 minutes. Each phase builds on the previous.</p>
+        </div>
+        <div class="progress-container glass-card">
+          <div class="progress-phases" id="progress-phases">
+            <div class="phase" data-phase="1">
+              <div class="phase-indicator">
+                <div class="phase-dot"></div>
+                <div class="phase-line"></div>
+              </div>
+              <div class="phase-info">
+                <h3>Phase 1: Premise & Architecture</h3>
+                <p>Book promise, characters, structural spine</p>
+              </div>
+              <div class="phase-status">Waiting</div>
+            </div>
+            <div class="phase" data-phase="2">
+              <div class="phase-indicator">
+                <div class="phase-dot"></div>
+                <div class="phase-line"></div>
+              </div>
+              <div class="phase-info">
+                <h3>Phase 2: Chapter Outlines</h3>
+                <p>Detailed chapter-by-chapter breakdown</p>
+              </div>
+              <div class="phase-status">Waiting</div>
+            </div>
+            <div class="phase" data-phase="3">
+              <div class="phase-indicator">
+                <div class="phase-dot"></div>
+                <div class="phase-line"></div>
+              </div>
+              <div class="phase-info">
+                <h3>Phase 3: Reference Tables</h3>
+                <p>Cross-references, trackers, inventories</p>
+              </div>
+              <div class="phase-status">Waiting</div>
+            </div>
+            <div class="phase" data-phase="4">
+              <div class="phase-indicator">
+                <div class="phase-dot"></div>
+              </div>
+              <div class="phase-info">
+                <h3>Phase 4: Master Prompt</h3>
+                <p>Voice DNA, writing guide, quality tests</p>
+              </div>
+              <div class="phase-status">Waiting</div>
+            </div>
+          </div>
+          <div class="progress-timer" id="progress-timer">0:00</div>
+        </div>
+      </section>
+
+      <!-- Screen 5: Output View -->
+      <section id="screen-output" class="screen">
+        <div class="screen-header">
+          <h1 id="output-title">Your Outline is Ready</h1>
+          <p class="subtitle" id="output-meta"></p>
+        </div>
+        <div class="output-tabs">
+          <button class="tab active" data-tab="outline">📄 Outline</button>
+          <button class="tab" data-tab="prompt">🎨 Master Prompt</button>
+        </div>
+        <div class="output-container">
+          <div class="output-panel active" id="panel-outline">
+            <div class="output-actions">
+              <button class="btn btn-ghost" id="copy-outline">📋 Copy</button>
+              <button class="btn btn-ghost" id="download-outline">💾 Download .md</button>
+            </div>
+            <pre class="output-content" id="outline-content"></pre>
+          </div>
+          <div class="output-panel" id="panel-prompt">
+            <div class="output-actions">
+              <button class="btn btn-ghost" id="copy-prompt">📋 Copy</button>
+              <button class="btn btn-ghost" id="download-prompt">💾 Download .md</button>
+            </div>
+            <pre class="output-content" id="prompt-content"></pre>
+          </div>
+        </div>
+        <div class="output-footer">
+          <button class="btn btn-primary" id="new-outline-btn">
+            <span class="btn-icon">✨</span>
+            Create Another Outline
+          </button>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <script type="module" src="/src/ui/app.js"></script>
+</body>
+</html>
