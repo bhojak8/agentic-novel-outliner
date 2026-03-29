@@ -60,9 +60,9 @@ Open `http://localhost:3000` in your browser.
 
 ### AI Provider Setup
 
-**Primary (No setup needed):** The app uses [Rork AI Toolkit](https://toolkit.rork.com) as the primary provider — free, no API key required.
 
-**Fallback (Optional):** Add API keys in Settings for backup providers:
+
+Add API keys in Settings for backup providers:
 - [Groq](https://console.groq.com) — Fast inference
 - [OpenRouter](https://openrouter.ai) — Multi-model access
 - [NVIDIA NIM](https://build.nvidia.com) — Enterprise models
@@ -96,9 +96,7 @@ src/
 ```
 User Request
     ↓
-Rork AI (Primary, Free)
-    ↓ (if fails 5x → circuit breaker)
-API Fallback (Groq → OpenRouter → NVIDIA)
+API (Groq → OpenRouter → NVIDIA)
     ↓
 Response
 ```
